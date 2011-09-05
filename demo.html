@@ -5,20 +5,54 @@
 <body>
 </body>
 <script>
-    tpl = new Yogurt.templates();
-    tpl.template("<div><h1>${ title }</h1></div>");
-    document.getElementsByTagName('body')[0].innerHTML = tpl.render({title:"Testing!"});
-    
-    view = new Yogurt.api.controller();
-    view(function([e,d],rnd){
-            console.log("e="+e);console.log("d="+d);console.log(rnd); 
-            tpl.template("<div>${ result }</div>");
-            document.getElementsByTagName('body')[0].innerHTML += tpl.render({result:e});
-        }, 
-        {'^profile/(\\d)/(\\d+)/?$':'/user/profile/'},
-        {extension:'', debug:true}
+    function append(d){ document.getElementsByTagName("body")[0].innerHTML = d } 
+    tpl = new Yogurt.Templates();
+    routes = new Yogurt.api.Controller();
+    routes(
+        /* function action */
+        function(route, data, rnd){ 
+            console.log(route, data, rnd);
+            views[route](route,data,rnd);
+        },
+        /* RegExp URL : route name */
+        {
+            "^$" : "main",
+            "^profile/(\\d+)/(\\w+)/?$" : "profile",
+            "^fibo/(\\d+)/(\\d+)/?$" : "fibo" 
+        },
+        /* configs */
+        { debug:false /* default */ }
     );
 
-    
+    var views = {
+        main : function(route,data, rnd){
+            tpl.template("\
+            <div><h1>${ title }</h1><p>${ text }</p></div>\
+            <p><a href='#!/profile/123456/XavierLesa'>Profile</a></p>\
+            <p><a href='#!/fibo/1/21/'>Fibonacci</a></p>\
+            ");
+            append(tpl.render({title:"Testing!",text:"This route is "+route}));
+        },
+
+        profile : function(route,data,rnd){
+            console.log("route="+route);console.log("data="+data);console.log(rnd); 
+            tpl.template("<div>route=${ route }, data: ${ data }</div>");
+            append(tpl.render({route:route, data:data}));
+        },
+
+        fibo : function(route, data, rnd){
+            var base = Number(data[0]), length = Number(data[1]);
+            for(var i=2, r=[0,base]; i<length; r.push(r[i-1] + r[i-2]), i++);
+            tpl.template("<div>(${ route }) fibo base: ${ base }, length: ${ length }</div><div> ${ sec }</div><div>${ prop }</div>");
+            html = tpl.render({
+                route:route,
+                base:base, 
+                length:length, 
+                prop:function(x){ var c;for(a=0,b=1; b<=r.length-1; a++,b++){ c = r[b]/r[a] }; return c }, 
+                sec:r.join(", ")
+            });
+            append(html);
+        }
+    };
 </script>
 </html>

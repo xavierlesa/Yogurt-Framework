@@ -19,7 +19,7 @@
     Yogurt.api = Yogurt.prototype = {
         iam: "Yogurt v1.0",
         init: function(){
-            log('Yogurt.api.init...');
+            log(iam);
             return this 
         },
 
@@ -113,35 +113,41 @@
         return obj;
     };
 
-    /* controller */
-    Yogurt.controller = Yogurt.api.controller  = function(f,routes,settings){
-        if(!iof(f)) return Yogurt.api.controller;
-
+    /* Controller */
+    Yogurt.Controller = Yogurt.api.Controller  = function(f,routes,settings){
+        if(!iof(f)) return Yogurt.api.Controller;
         settings = settings || {}
         var config = {
             path:'',
-            extension:'.html',
+            extension:'',
             interval:100,
             hashstring:'#!/',
+            cleanroutes: true,
             debug:false
         }
         Yogurt.extend(config, settings);
-        var _w,_path=config.path;
+        var _w,_h,_path=config.path,_r = N,rx;
         this.watch = function(){
-            if(top.location.hash.length >= 1 && top.location.hash.split(config.hashstring)[1] != undefined && _w != top.location.hash) {
-                _w = top.location.hash; var _h = _w.split(config.hashstring)[1]; var route = N;
+            if(top.location.hash == "") top.location.hash = config.hashstring;
+            else if(top.location.hash.length >= 1 && top.location.hash.split(config.hashstring)[1] !== undefined && _w !== top.location.hash) {
+                if(config.debug){ console.log('_w:' + _w, top.location.hash); }
+                _w = top.location.hash, _h = _w.split(config.hashstring)[1];
                 for(i in routes){ 
-                if(config.debug){ log(i); log(_h); }
-                    var rx = new RegExp(i);
-                    route = rx.test(_h) ? [routes[i], (rx.exec(_h)).slice(1)] : N;
+                    if(config.debug){ console.log(i, _h); }
+                    rx = new RegExp(i);
+                    _r = rx.test(_h) ? {route:routes[i], data:(rx.exec(_h)).slice(1)} : _r;
                 }
-                if(route) f(route,Math.random());
+                if(_r){
+                    if(config.debug) console.log('route:' + _r.route, 'data:' + _r.data);
+                    f(_r.route, _r.data, Math.random());
+                }
             }
         }
         var s=setInterval(this.watch,config.interval);
     };
 
-    Yogurt.templates = Yogurt.api.templates = function(){
+
+    Yogurt.Templates = Yogurt.api.Templates = function(){
         this.template = function(t){ if(t) this._template=t; else return this._template; return this; };
         this.context = function(varname){ return new RegExp('\\$\{ '+varname+' \}', 'g'); return this; };
         this.render = function(data_dict){
@@ -150,6 +156,15 @@
             return template;
         };
     };
+    Yogurt.extend(Yogurt.Controller, Yogurt.Templates);
+
+    Yogurt.Queryset = Yogurt.api.Queryset = function(){
+    };
+
+    Yogurt.Models = Yogurt.api.Models = function(){
+        
+    };
+
 
     /* utils and shortcuts */
     function log(v){ console.log(v) }
