@@ -1,6 +1,12 @@
 <html>
 <head>
+    <script src="jquery-1.4.4.js"></script>
     <script src="yogurt-1.0.js"></script>
+    <style>
+        /* Magic Google Web Fonts :) */
+        @import url(http://fonts.googleapis.com/css?family=Carter+One);
+        h1 { font-family: 'Carter One', sans-serif; text-shadow: 2px 2px 2px #f0f0f0; color:#666 }
+    </style>
 </head>
 <body>
 </body>
@@ -26,11 +32,10 @@
 
     var views = {
         main : function(route,data, rnd){
-            tpl.template("\
-            <div><h1>${ title }</h1><p>${ text }</p></div>\
-            <p><a href='#!/profile/123456/XavierLesa'>Profile</a></p>\
-            <p><a href='#!/fibo/1/21/'>Fibonacci</a></p>\
-            ");
+            template = "<div><h1>${ title }</h1><p>${ text }</p></div>";
+            template += "<p><a href='#!/profile/123456/XavierLesa'>Profile</a></p>";
+            template += "<p><a href='#!/fibo/1/21/'>Fibonacci</a></p>";
+            tpl.template(template);
             append(tpl.render({title:"Testing!",text:"This route is "+route}));
         },
 
@@ -54,5 +59,7 @@
             append(html);
         }
     };
-</script>
+
+    var qssuc = [{'vendor':'citroen', 'sucursal_type':'ventas 0km', 'name':'test', 'address':'test', 'phone':''},{'vendor':'citroen', 'sucursal_type':'ventas corporativas', 'name':'Citroën Corpo', 'address':'AAAA 123', 'phone':''},{'vendor':'peugeot', 'sucursal_type':'plan de ahorro', 'name':'D&#39;ARC Peugeot Planes', 'address':'Av. del Libertador 6400', 'phone':''},{'vendor':'peugeot', 'sucursal_type':'talleres', 'name':'D&#39;ARC Peugeot Talleres', 'address':'Av. del Libertador 6400', 'phone':''},{'vendor':'peugeot', 'sucursal_type':'ventas 0km', 'name':'D&#39;ARC Peugeot 0KM', 'address':'Av. del Libertador 6400', 'phone':''},{'vendor':'peugeot', 'sucursal_type':'ventas 0km', 'name':'D&#39;ARC Peugeot Libertador', 'address':'Av. del Libertador 6400', 'phone':''},{'vendor':'peugeot', 'sucursal_type':'ventas usados', 'name':'D&#39;ARC Peugeot Usados', 'address':'Av. del Libertador 6400', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'post-venta', 'name':'Iberá 1541', 'address':'Iberá 1541', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Av. del Libertador 6946', 'address':'Av. del Libertador 6946', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Av. San Martín 6701', 'address':'Av. San Martín 6701', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Monroe 1530', 'address':'Monroe 1530', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Av. Fco. Beiró 4701', 'address':'Av. Fco. Beiró 4701', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Av. Fco. Beiró 3333', 'address':'Av. Fco. Beiró 3333', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Av. Libertador 2689', 'address':'Av. Libertador 2689', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Shopping Devoto ', 'address':'Shopping Devoto ', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'DOT Baires Shopping', 'address':'Vedia 3632 ', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'ventas 0km', 'name':'Monroe 1530', 'address':'Monroe 1530', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'ventas corporativas', 'name':'Vallejos 3487 ', 'address':'Vallejos 3487 ', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'ventas usados', 'name':'Alta Gama', 'address':'Arribeños 3132 ', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'ventas usados', 'name':'Av. San Martín 6701', 'address':'Av. San Martín 6701', 'phone':''}];
+    </script>
 </html>
