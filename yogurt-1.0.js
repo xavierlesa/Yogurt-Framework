@@ -151,7 +151,10 @@
         this.context = function(varname){ return new RegExp('\\$\{ '+varname+' \}', 'g'); return this; };
         this.render = function(data_dict){
             template = this.template();
-            for(k in data_dict){ template = template.replace(this.context(k), data_dict[k]) }
+            data_dict = isa(data_dict) ? data_dict : [data_dict];
+            for(var i=0;i<=data_dict.length-1;i++){
+                for(k in data_dict[i]){ template = template.replace(this.context(k), data_dict[i][k]) }
+            }
             return template;
         };
 
@@ -182,13 +185,14 @@
     /* Queryset */
     Yogurt.Queryset = Yogurt.api.Queryset = function(data){
         this._data = data || []; // list format
-        this._objects = []; // store models
+        this.objects = []; // store models
         this.fill = function(){
             for(var iter=0; iter <= this._data.length-1; iter++){
-                this._objects.push(new Yogurt.Models(this._data[iter]));
+                this.objects.push( this._data[iter] instanceof Yogurt.Models ? this._data[iter] : new Yogurt.Models(this._data[iter]) );
             }
         }
-        this.count = function(){ return this._objects.length }
+        this.iter = function(f,i,o){ return this.objects.map(f,i,o); }
+        this.count = function(){ return this.objects.length }
         
         /*
          * filter:
@@ -263,56 +267,54 @@
                 "ICONTAINS":["~%=","%~=","__icontains"],
                 "REGEX":    ["r=","__regex"]
             },
-            filter_ops_regex; 
+            filter_ops_regex;
             // [objects,,,,] 'country', ['__eq','__ieq',,,], 'Argentina' [,prev chain]
+            function _normalize(o){ return isNaN(o) ? o.strip() : Number(o) }
             function _filter_chain(obj, key, op, val, qs_chain){
-                key = key.strip(), op = op.strip(), val = val.strip();
+                key = key.strip(), op = op.strip(), val = isNaN(val) ? val.strip() : Number(val.strip());
                 //console.log(obj, key, op, val, qs_chain);
-                qs_chain = qs_chain || [];
+                var qs_chain = qs_chain || [];
                 // equal
-                if(ina(filter_ops['AND'],op)) obj.map(function(o){  if(o[key] == val) qs_chain.push(o) });
+                if(ina(filter_ops['AND'],op)) obj.map(function(o){  if( _normalize(o.data[key]) == val) qs_chain.push(o) });
                 // iequal
-                if(ina(filter_ops['IAND'],op)) obj.map(function(o){ if((o[key]).toString().toLowerCase() == (val).toString().toLowerCase()) qs_chain.push(o) });
+                if(ina(filter_ops['IAND'],op)) obj.map(function(o){ if((o.data[key]).toString().toLowerCase() == (val).toString().toLowerCase()) qs_chain.push(o) });
                 // not equal
-                if(ina(filter_ops['NOT-AND'],op)) obj.map(function(o){  if(o[key] != val) qs_chain.push(o) });
+                if(ina(filter_ops['NOT-AND'],op)) obj.map(function(o){  if( _normalize(o.data[key]) != val) qs_chain.push(o) });
                 // not iequal
-                if(ina(filter_ops['NOT-IAND'],op)) obj.map(function(o){ if((o[key]).toString().toLowerCase() != (val).toString().toLowerCase()) qs_chain.push(o) });
+                if(ina(filter_ops['NOT-IAND'],op)) obj.map(function(o){ if((o.data[key]).toString().toLowerCase() != (val).toString().toLowerCase()) qs_chain.push(o) });
                 // less or equal than
-                if(ina(filter_ops['LTE'],op)) obj.map(function(o){  if(o[key] <= val) qs_chain.push(o) });
+                if(ina(filter_ops['LTE'],op)) obj.map(function(o,i){ if( _normalize(o.data[key]) <= val) qs_chain.push(o) });
                 // greater or equal than
-                if(ina(filter_ops['GTE'],op)) obj.map(function(o){  if(o[key] >= val) qs_chain.push(o) });
+                if(ina(filter_ops['GTE'],op)) obj.map(function(o){  if( _normalize(o.data[key]) >= val) qs_chain.push(o) });
                 // less than
-                if(ina(filter_ops['LT'],op)) obj.map(function(o){  if(o[key] < val) qs_chain.push(o) });
+                if(ina(filter_ops['LT'],op)) obj.map(function(o){  if( _normalize(o.data[key]) < val) qs_chain.push(o) });
                 // greater than
-                if(ina(filter_ops['LT'],op)) obj.map(function(o){  if(o[key] > val) qs_chain.push(o) });
+                if(ina(filter_ops['LT'],op)) obj.map(function(o){  if( _normalize(o.data[key]) > val) qs_chain.push(o) });
                 // starts with
-                if(ina(filter_ops['STW'],op)) obj.map(function(o){ if( (new RegExp("^"+val)).test(o[key]) ) qs_chain.push(o) });
+                if(ina(filter_ops['STW'],op)) obj.map(function(o){ if( (new RegExp("^"+val)).test(o.data[key]) ) qs_chain.push(o) });
                 // istarts with
-                if(ina(filter_ops['ISTW'],op)) obj.map(function(o){ if( (new RegExp("^"+val,"i")).test(o[key]) ) qs_chain.push(o) });
+                if(ina(filter_ops['ISTW'],op)) obj.map(function(o){ if( (new RegExp("^"+val,"i")).test(o.data[key]) ) qs_chain.push(o) });
                 // ends with
-                if(ina(filter_ops['EDW'],op)) obj.map(function(o){ if( (new RegExp(val+"$")).test(o[key]) ) qs_chain.push(o) });
+                if(ina(filter_ops['EDW'],op)) obj.map(function(o){ if( (new RegExp(val+"$")).test(o.data[key]) ) qs_chain.push(o) });
                 // iends with
-                if(ina(filter_ops['IEDW'],op)) obj.map(function(o){ if( (new RegExp(val+"$","i")).test(o[key]) ) qs_chain.push(o) });
+                if(ina(filter_ops['IEDW'],op)) obj.map(function(o){ if( (new RegExp(val+"$","i")).test(o.data[key]) ) qs_chain.push(o) });
                 // contains
-                if(ina(filter_ops['CONTAINS'],op)) obj.map(function(o){ if( (new RegExp(val)).test(o[key]) ) qs_chain.push(o) });
+                if(ina(filter_ops['CONTAINS'],op)) obj.map(function(o){ if( (new RegExp(val)).test(o.data[key]) ) qs_chain.push(o) });
                 // icontanis
-                if(ina(filter_ops['ICONTAINS'],op)) obj.map(function(o){ if( (new RegExp(val,"i")).test(o[key]) ) qs_chain.push(o) });
+                if(ina(filter_ops['ICONTAINS'],op)) obj.map(function(o){ if( (new RegExp(val,"i")).test(o.data[key]) ) qs_chain.push(o) });
                 // regex
-                if(ina(filter_ops['REGEX'],op)) obj.map(function(o){ if( (new RegExp(val)).test(o[key]) ) qs_chain.push(o) });
+                if(ina(filter_ops['REGEX'],op)) obj.map(function(o){ if( (new RegExp(val)).test(o.data[key]) ) qs_chain.push(o) });
                 return qs_chain;
             }
 
             // itera entre cada filtro de la cadena
-            var qs_chain=[];
             filter = filter.split(filter_and_separator);
-            for(var iter=0; iter <= filter.length-1; iter++){
-                try{
-                    keyval = filter[iter].split(/\=|[\~|\!]+\=|__\w+\s?/g);
-                    op = filter[iter].match(/\=|[\~|\!]+\=|__\w+\s?/g);
-                    key = keyval[0].strip(), val = keyval[keyval.length-1];
-                    _filter_chain(this._objects, key, op[0].strip(), val, qs_chain);
-                }
-                catch(e){}
+            for(var iter=0, qs_chain=[]; iter <= filter.length-1; iter++){
+                keyval = filter[iter].split(/\=|[\~|\!|\<|\>]+\=|__\w+\s?/g),
+                op = filter[iter].match(/\=|[\~|\!|\<|\>]+\=|__\w+\s?/g),
+                key = _normalize(keyval[0]),
+                val = keyval[keyval.length-1];
+                _filter_chain(this.objects, key, _normalize(op[0]), val, qs_chain);
             }
             return new Yogurt.Queryset(qs_chain);
         }
@@ -323,19 +325,25 @@
 
     /* Models */
     Yogurt.Models = Yogurt.api.Models = function(datastructure){
-        this._datastructure = datastructure || {}; // dict
+        this.data = datastructure || {}; // dict
         this._template = "";
-        this.toHTML = function(template){
+        this.toHTML = function(template, extra_context){
             template = template || this._template;
+            extra_context = extra_context || {}
             tpl = new Yogurt.Templates();
-            return tpl.template(template).render(this._datastructure);
+            return tpl.template(template).render(Yogurt.api.extend(this.data, extra_context));
         }
-        return this._datastructure;
+
+        // itera buscando relaciones, todo lo que es obejto es relacionado
+        for(var key in this.data){
+            if(ioo(this.data[key]))
+                if(isa(this.data[key]))
+                    this.data[key] = new Yogurt.Queryset(this.data[key]);
+                else
+                    this.data[key] = new Yogurt.Models(this.data[key]);
+        }
+        //return this.data;
     };
-
-
-
-
 
     /* utils and shortcuts */
     function log(v){ console.log(v) }
