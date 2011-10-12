@@ -13,7 +13,7 @@
 (function(){
 
     /* quick init object window. */
-    var window = this, undefined, T = true, F = false, N = null, U = undefined,
+    var window = this, undefined, T = true, F = false, N = null, U = undefined, Fn = Function, Obj = Object, Str = String, Num = Number, Bool = Boolean,
     Yogurt = window.Yogurt = function(){ return new Yogurt.api.init() };
     /* prototype */
     Yogurt.api = Yogurt.prototype = {
@@ -72,7 +72,7 @@
          * keys(Object)
          * Return a list of keys for Object
          */
-        keys: Object.keys,
+        keys: Obj.keys,
 
         /* values()
          * values(Object)
@@ -96,8 +96,11 @@
         tob:tob,
         to:to,
         ioo:ioo,
+        ion:ion,
         ios:ios,
         iof:iof,
+        iob:iob,
+        ioi:ioi,
         n:n,
         v:v,
         isa:isa,
@@ -121,14 +124,14 @@
             extension:'',
             interval:100,
             hashstring:'#!/',
-            cleanroutes: true,
-            debug:false
+            cleanroutes: T,
+            debug:F
         }
         Yogurt.extend(config, settings);
         var _w,_h,_path=config.path,_r = N,rx;
         this.watch = function(){
             if(top.location.hash == "") top.location.hash = config.hashstring;
-            else if(top.location.hash.length >= 1 && top.location.hash.split(config.hashstring)[1] !== undefined && _w !== top.location.hash) {
+            else if(top.location.hash.length >= 1 && top.location.hash.split(config.hashstring)[1] !== U && _w !== top.location.hash) {
                 if(config.debug){ console.log('_w:' + _w, top.location.hash); }
                 _w = top.location.hash, _h = _w.split(config.hashstring)[1];
                 for(i in routes){ 
@@ -186,7 +189,7 @@
     Yogurt.Queryset = Yogurt.api.Queryset = function(data){
         this._data = data || []; // list format
         this.objects = []; // store models
-        this.fill = function(){
+        this._fill = function(){
             for(var iter=0; iter <= this._data.length-1; iter++){
                 this.objects.push( this._data[iter] instanceof Yogurt.Models ? this._data[iter] : new Yogurt.Models(this._data[iter]) );
             }
@@ -249,7 +252,7 @@
          */
         this.filter = function(filter){
             filter = !tos(filter) ? filter.toString().strip() : filter.strip();
-            var filter_and_separator = /,/,
+            var filter_and_separator = /\s?[,|&|&&]+\s?/g,
             filter_ops = {
                 "AND":      ["=","__eq"],
                 "IAND":     ["~=","__ieq"],
@@ -267,13 +270,17 @@
                 "ICONTAINS":["~%=","%~=","__icontains"],
                 "REGEX":    ["r=","__regex"]
             },
-            filter_ops_regex;
+            filter_ops_regex, qs_chain = this.objects;
             // [objects,,,,] 'country', ['__eq','__ieq',,,], 'Argentina' [,prev chain]
-            function _normalize(o){ return isNaN(o) ? o.strip() : Number(o) }
-            function _filter_chain(obj, key, op, val, qs_chain){
-                key = key.strip(), op = op.strip(), val = isNaN(val) ? val.strip() : Number(val.strip());
-                //console.log(obj, key, op, val, qs_chain);
-                var qs_chain = qs_chain || [];
+            function _normalize(o){ return isNaN(o) ? o.strip() : Num(o) }
+            function _filter_chain(obj, key, op, val){
+                key = key.strip(), 
+                op = op.strip(), 
+                val = isNaN(val) ? val.strip() : Num(val.strip());
+
+                //console.log(obj.length, key, op, val);
+
+                var qs_chain = [];
                 // equal
                 if(ina(filter_ops['AND'],op)) obj.map(function(o){  if( _normalize(o.data[key]) == val) qs_chain.push(o) });
                 // iequal
@@ -309,18 +316,38 @@
 
             // itera entre cada filtro de la cadena
             filter = filter.split(filter_and_separator);
-            for(var iter=0, qs_chain=[]; iter <= filter.length-1; iter++){
+            console.log(filter);
+
+            for(var iter=0; iter <= filter.length-1; iter++){
                 keyval = filter[iter].split(/\=|[\~|\!|\<|\>]+\=|__\w+\s?/g),
                 op = filter[iter].match(/\=|[\~|\!|\<|\>]+\=|__\w+\s?/g),
                 key = _normalize(keyval[0]),
                 val = keyval[keyval.length-1];
-                _filter_chain(this.objects, key, _normalize(op[0]), val, qs_chain);
+                qs_chain = _filter_chain(qs_chain, key, _normalize(op[0]), val);
             }
+            //console.log(qs_chain);
             return new Yogurt.Queryset(qs_chain);
         }
 
+        /*
+         * group by
+         *
+         * return an Object withing Arrays of Queryset
+         *
+         */
+        this.group_by = function(field){
+            var grp = {};
+            this.objects.map(function(o){ 
+                grp[o.data[field]] = [];
+            });
+            for(iter in grp){
+                if(!tou(iter) && iter!=U) grp[iter] = this.filter( field+"__ieq = "+iter );
+            }
+            return grp;
+        }
+
         // init
-        this.fill();
+        this._fill();
     };
 
     /* Models */
@@ -355,17 +382,18 @@
     function tof(o){ return typeof o == "function" }
     function tob(o){ return typeof o == "boolean" }
     function to(o){ return typeof o }
-    function ioo(o){ return o instanceof Object }
-    function ios(o){ return o instanceof String }
-    //function ion(o){ return o instanceof Number }
-    function iof(o){ return o instanceof Function }
-    //function iob(o){ return o instanceof Boolean }
+    function ioo(o){ return o instanceof Obj }
+    function ios(o){ return o instanceof Str }
+    function ion(o){ return o instanceof Num }
+    function iof(o){ return o instanceof Fn }
+    function iob(o){ return o instanceof Bool }
+    function ioi(o,i){ return o instanceof i }
     /* is null? */
     function n(o){ return o == N }
     /* validate */
     function v(o){return o !== 0 && o !== F && o.length > 0 && !tou(o) && !n(o) && o != -1 }
     /* is array? */
-    function isa(o){ return o && !(o.propertyIsEnumerable("length")) && too(o) && ton(o.length) && Object.prototype.toString.call(o) === "[object Array]" }
+    function isa(o){ return o && !(o.propertyIsEnumerable("length")) && too(o) && ton(o.length) && Obj.prototype.toString.call(o) === "[object Array]" }
     /* is in array? */
     function ina(a,v){ for(i=0,l=a.length; i<l; i++){ if(a[i] === v) return T } return F }
     /* string to array */
@@ -374,8 +402,8 @@
 
     /* prototype string */
     // strip, lstrip, rstrip
-    if(typeof(String.prototype.strip) === "undefined"){ String.prototype.strip = function() { return String(this).replace(/^\s+|\s+$/g, ''); }; }
-    if(typeof(String.prototype.lstrip) === "undefined"){ String.prototype.lstrip = function() { return String(this).replace(/^\s+/g, ''); }; }
-    if(typeof(String.prototype.rstrip) === "undefined"){ String.prototype.rstrip = function() { return String(this).replace(/\s+$/g, ''); }; }
+    if(typeof(Str.prototype.strip) === "undefined"){ Str.prototype.strip = function() { return Str(this).replace(/^\s+|\s+$/g, ''); }; }
+    if(typeof(Str.prototype.lstrip) === "undefined"){ Str.prototype.lstrip = function() { return Str(this).replace(/^\s+/g, ''); }; }
+    if(typeof(Str.prototype.rstrip) === "undefined"){ Str.prototype.rstrip = function() { return Str(this).replace(/\s+$/g, ''); }; }
 
 })();
