@@ -4,6 +4,8 @@
     <!--script src="https://raw.github.com/ninjaotoko/Yogurt-Framework/master/yogurt-1.0.js"></script-->
     <script src="yogurt-1.0.js"></script>
     <script src="models.js"></script>
+    <script src="asesoramiento.json.js"></script>
+    <!--script src="maquinarias.json.js"></script-->
     <style>
         /* Magic Google Web Fonts :) */
         @import url(http://fonts.googleapis.com/css?family=Carter+One);
@@ -61,7 +63,30 @@
             append(html);
         }
     };
+    </script>
+    <script>
+        var imagesModel = function(data){
+            this.data = data;
+            this._setdata();
+        }
+        imagesModel.prototype = new Yogurt.Models();
+        imagesModel.prototype.constructor = imagesModel;
 
-    var qssuc = [{'vendor':'citroen', 'sucursal_type':'ventas 0km', 'name':'test', 'address':'test', 'phone':''},{'vendor':'citroen', 'sucursal_type':'ventas corporativas', 'name':'Citroën Corpo', 'address':'AAAA 123', 'phone':''},{'vendor':'peugeot', 'sucursal_type':'plan de ahorro', 'name':'D&#39;ARC Peugeot Planes', 'address':'Av. del Libertador 6400', 'phone':''},{'vendor':'peugeot', 'sucursal_type':'talleres', 'name':'D&#39;ARC Peugeot Talleres', 'address':'Av. del Libertador 6400', 'phone':''},{'vendor':'peugeot', 'sucursal_type':'ventas 0km', 'name':'D&#39;ARC Peugeot 0KM', 'address':'Av. del Libertador 6400', 'phone':''},{'vendor':'peugeot', 'sucursal_type':'ventas 0km', 'name':'D&#39;ARC Peugeot Libertador', 'address':'Av. del Libertador 6400', 'phone':''},{'vendor':'peugeot', 'sucursal_type':'ventas usados', 'name':'D&#39;ARC Peugeot Usados', 'address':'Av. del Libertador 6400', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'post-venta', 'name':'Iberá 1541', 'address':'Iberá 1541', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Av. del Libertador 6946', 'address':'Av. del Libertador 6946', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Av. San Martín 6701', 'address':'Av. San Martín 6701', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Monroe 1530', 'address':'Monroe 1530', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Av. Fco. Beiró 4701', 'address':'Av. Fco. Beiró 4701', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Av. Fco. Beiró 3333', 'address':'Av. Fco. Beiró 3333', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Av. Libertador 2689', 'address':'Av. Libertador 2689', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'Shopping Devoto ', 'address':'Shopping Devoto ', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'showroom', 'name':'DOT Baires Shopping', 'address':'Vedia 3632 ', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'ventas 0km', 'name':'Monroe 1530', 'address':'Monroe 1530', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'ventas corporativas', 'name':'Vallejos 3487 ', 'address':'Vallejos 3487 ', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'ventas usados', 'name':'Alta Gama', 'address':'Arribeños 3132 ', 'phone':''},{'vendor':'volkswagen', 'sucursal_type':'ventas usados', 'name':'Av. San Martín 6701', 'address':'Av. San Martín 6701', 'phone':''}];
+        var myModel = function(data){ 
+            this.data = data; 
+            this._planos_model = imagesModel;
+            this._setdata();
+            this.getplanos = function(){
+                if(this.data.planos._data.length && !this.planos){
+                    this.planos = this.data.planos = new Yogurt.Queryset(this.data.planos._data, imagesModel);
+                }
+                return this.planos;
+            }
+
+        }
+        myModel.prototype = new Yogurt.Models();
+        myModel.prototype.constructor = myModel;
+
+        var qsa = new Yogurt.Queryset(qsasesoramiento, myModel);
     </script>
 </html>

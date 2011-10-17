@@ -186,12 +186,13 @@
     };
 
     /* Queryset */
-    Yogurt.Queryset = Yogurt.api.Queryset = function(data){
+    Yogurt.Queryset = Yogurt.api.Queryset = function(data, Model){
+        var Model = Model || Yogurt.Models;
         this._data = data || []; // list format
         this.objects = []; // store models
         this._fill = function(){
             for(var iter=0; iter <= this._data.length-1; iter++){
-                this.objects.push( this._data[iter] instanceof Yogurt.Models ? this._data[iter] : new Yogurt.Models(this._data[iter]) );
+                this.objects.push( this._data[iter] instanceof Yogurt.Models ? this._data[iter] : new Model(this._data[iter]) );
             }
         }
         this.iter = function(f,i,o){ return this.objects.map(f,i,o); }
@@ -351,25 +352,50 @@
     };
 
     /* Models */
-    Yogurt.Models = Yogurt.api.Models = function(datastructure){
-        this.data = datastructure || {}; // dict
+    Yogurt.Models = Yogurt.api.Models = function(data, Model){
+        var Model = Model || Yogurt.Models;
+        this.data = data || {}; // dict
+        this.extend = Yogurt.extend;
         this._template = "";
         this.toHTML = function(template, extra_context){
             template = template || this._template;
             extra_context = extra_context || {}
             tpl = new Yogurt.Templates();
             return tpl.template(template).render(Yogurt.api.extend(this.data, extra_context));
-        }
+        };
 
-        // itera buscando relaciones, todo lo que es obejto es relacionado
-        for(var key in this.data){
-            if(ioo(this.data[key]))
-                if(isa(this.data[key]))
-                    this.data[key] = new Yogurt.Queryset(this.data[key]);
-                else
-                    this.data[key] = new Yogurt.Models(this.data[key]);
-        }
-        //return this.data;
+        // setter, getter
+        this._setget = function(k,v){
+            if(k&&v&&this[k]){ this[k] = v; return this }
+            else if(k&&this[k]) return this[k];
+            else for(var key in this.data){
+                if(!this.hasOwnProperty('get'+key)) this['get'+key] = function(){ return this.data[key] }
+                if(!this.hasOwnProperty('set'+key)) this['set'+key] = function(d){ this.data[key] = d; return this.data[key] }
+            }
+        };
+
+        // set data
+        this._setdata = function(){
+            for(key in this.data){
+                // itera buscando relaciones (todo lo que es objeto es relacionado)
+                Model = this.hasOwnProperty('_'+key+'_model') ? this['_'+key+'_model'] : Model;
+                //console.log(key, this.hasOwnProperty('_'+key+'_model'));
+                if(ioo(this.data[key])) this.data[key] = isa(this.data[key]) ? new Yogurt.Queryset(this.data[key], Model) : new Model(this.data[key]);
+            }
+            this._setget();
+        };
+        
+        this.toString = function(){ 
+            keys = Object.keys(this.data); 
+            vals = []; 
+            for(i in this.data) vals.push(this.data[i]);
+            return ""+[keys, vals];
+        };
+
+        // init model data
+        this._setdata();
+        //this._setget();
+
     };
 
     /* utils and shortcuts */
