@@ -424,12 +424,26 @@
     function ina(a,v){ for(i=0,l=a.length; i<l; i++){ if(a[i] === v) return T } return F }
     /* string to array */
     function sta(o){ return isa(o) ? o : (tos(o) ? o.split(" "): [o]) }
+    function _safe_str(input){
+        function _s(s){
+            var l = s.length;
+            if (l == 0) return '0000';
+            if (l == 1) return '000' + s;
+            if (l == 2) return '00' + s;
+            if (l == 3) return '0' + s;
+            return s;
+        }
+        var o = '';
+        for (var i=0, l=input.length; i<l; i++) o +=  (new RegExp(/\w|\d|\s/)).test(input[i]) ? input[i] : '\\u' + _s(input.charCodeAt(i).toString(16));
+        return o;
+    }
 
 
     /* prototype string */
-    // strip, lstrip, rstrip
-    if(typeof(Str.prototype.strip) === "undefined"){ Str.prototype.strip = function() { return Str(this).replace(/^\s+|\s+$/g, ''); }; }
-    if(typeof(Str.prototype.lstrip) === "undefined"){ Str.prototype.lstrip = function() { return Str(this).replace(/^\s+/g, ''); }; }
-    if(typeof(Str.prototype.rstrip) === "undefined"){ Str.prototype.rstrip = function() { return Str(this).replace(/\s+$/g, ''); }; }
+    // strip, lstrip, rstrip, safe
+    if(typeof(Str.prototype.strip) === "undefined"){ Str.prototype.strip = function(){ return Str(this).replace(/^\s+|\s+$/g, ''); } }
+    if(typeof(Str.prototype.lstrip) === "undefined"){ Str.prototype.lstrip = function(){ return Str(this).replace(/^\s+/g, ''); } }
+    if(typeof(Str.prototype.rstrip) === "undefined"){ Str.prototype.rstrip = function(){ return Str(this).replace(/\s+$/g, ''); } }
+    if(typeof(Str.prototype.safe) == "undefined"){ Str.prototype.safe = function(){ return _safe_str(Str(this)); } }
 
 })();
