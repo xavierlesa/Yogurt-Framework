@@ -1,0 +1,93 @@
+<html>
+<head>
+    <script src="jquery-1.4.4.js"></script>
+    <!--script src="https://raw.github.com/ninjaotoko/Yogurt-Framework/master/yogurt-1.0.js"></script-->
+    <script src="yogurt-1.0.js"></script>
+    <script src="models.js"></script>
+    <script src="asesoramiento.json.js"></script>
+    <!--script src="maquinarias.json.js"></script-->
+    <style>
+        /* Magic Google Web Fonts :) */
+        @import url(http://fonts.googleapis.com/css?family=Carter+One);
+        h1 { font-family: 'Carter One', sans-serif; text-shadow: 2px 2px 2px #f0f0f0; color:#666 }
+    </style>
+</head>
+<body>
+</body>
+<script>
+    function append(d){ document.getElementsByTagName("body")[0].innerHTML = d } 
+    tpl = new Yogurt.Templates();
+    routes = new Yogurt.api.Controller();
+    routes(
+        /* function action */
+        function(route, data, rnd){ 
+            console.log(route, data, rnd);
+            views[route](route,data,rnd);
+        },
+        /* RegExp URL : route name */
+        {
+            "^$" : "main",
+            "^profile/(\\d+)/(\\w+)/?$" : "profile",
+            "^fibo/(\\d+)/(\\d+)/?$" : "fibo" 
+        },
+        /* configs */
+        { debug:false /* default */ }
+    );
+
+    var views = {
+        main : function(route,data, rnd){
+            template = "<div><h1>${ title }</h1><p>${ text }</p></div>";
+            template += "<p><a href='#!/profile/123456/XavierLesa'>Profile</a></p>";
+            template += "<p><a href='#!/fibo/1/21/'>Fibonacci</a></p>";
+            tpl.template(template);
+            append(tpl.render({title:"Testing!",text:"This route is "+route}));
+        },
+
+        profile : function(route,data,rnd){
+            console.log("route="+route);console.log("data="+data);console.log(rnd); 
+            tpl.template("<div>route=${ route }, data: ${ data }</div>");
+            append(tpl.render({route:route, data:data}));
+        },
+
+        fibo : function(route, data, rnd){
+            var base = Number(data[0]), length = Number(data[1]);
+            for(var i=2, r=[0,base]; i<length; r.push(r[i-1] + r[i-2]), i++);
+            tpl.template("<div>(${ route }) fibo base: ${ base }, length: ${ length }</div><div> ${ sec }</div><div>${ prop }</div>");
+            html = tpl.render({
+                route:route,
+                base:base, 
+                length:length, 
+                prop:function(x){ var c;for(a=0,b=1; b<=r.length-1; a++,b++){ c = r[b]/r[a] }; return c }, 
+                sec:r.join(", ")
+            });
+            append(html);
+        }
+    };
+    </script>
+    <script>
+        var imagesModel = function(data){
+            this.data = data;
+            this._setdata();
+        }
+        imagesModel.prototype = new Yogurt.Models();
+        imagesModel.prototype.constructor = imagesModel;
+
+        var myModel = function(data){ 
+            this.data = data; 
+            this._planos_model = imagesModel;
+            this._setdata();
+            this.getplanos = function(){
+                if(this.data.planos._data.length && !this.planos){
+                    this.planos = this.data.planos = new Yogurt.Queryset(this.data.planos._data, imagesModel);
+                }
+                return this.planos;
+            }
+
+        }
+        myModel.prototype = new Yogurt.Models();
+        myModel.prototype.constructor = myModel;
+
+        var qsa = new Yogurt.Queryset(qsasesoramiento, myModel);
+    </script>
+</html>
+<!-- End file -->
