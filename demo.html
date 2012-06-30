@@ -36,10 +36,10 @@
 
     var views = {
         main : function(route,data, rnd){
-            template = "<div><h1>${ title }</h1><p>${ text }</p></div>";
-            template += "<p><a href='#!/profile/123456/XavierLesa'>Profile</a></p>";
-            template += "<p><a href='#!/fibo/1/21/'>Fibonacci</a></p>";
-            tpl.template(template);
+            template = ["<div><h1>${ title }</h1><p>${ text }</p></div>",
+            "<p><a href='#!/profile/123456/XavierLesa'>Profile</a></p>",
+            "<p><a href='#!/fibo/1/21/'>Fibonacci</a></p>"];
+            tpl.template(template.join(''));
             append(tpl.render({title:"Testing!",text:"This route is "+route}));
         },
 
@@ -77,9 +77,8 @@
             this._planos_model = imagesModel;
             this._setdata();
             this.getplanos = function(){
-                if(this.data.planos._data.length && !this.planos){
-                    this.planos = this.data.planos = new Yogurt.Queryset(this.data.planos._data, imagesModel);
-                }
+                    this.planos = this.data.planos;
+
                 return this.planos;
             }
 
@@ -90,3 +89,4 @@
         var qsa = new Yogurt.Queryset(qsasesoramiento, myModel);
     </script>
 </html>
+<!-- comment -->

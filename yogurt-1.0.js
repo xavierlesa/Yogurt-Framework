@@ -11,9 +11,10 @@
  *
  */
 (function(){
-
     /* quick init object window. */
     var window = this, undefined, T = true, F = false, N = null, U = undefined, Fn = Function, Obj = Object, Str = String, Num = Number, Bool = Boolean,
+    ajaxprotect = /^\s*(while\s*\(\s*1\s*\)\s*;|\)\]\}\'\s*\n)/,
+    tstmp = +Date.now() || new Date().getTime();
     Yogurt = window.Yogurt = function(){ return new Yogurt.api.init() };
     /* prototype */
     Yogurt.api = Yogurt.prototype = {
@@ -151,12 +152,17 @@
     /* Templates */
     Yogurt.Templates = Yogurt.api.Templates = function(){
         this.template = function(t){ if(t) this._template=t; else return this._template; return this; };
-        this.context = function(varname){ return new RegExp('\\$\{ '+varname+' \}', 'g'); return this; };
+        this.context = function(varname){ return new RegExp('\\$\{ '+varname+' \}', 'g') };
+        this.filtertags = function(context){
+            return (new RegExp("\\$\{ ([a-z\-\_]+)([\|a-z\-\_]+) \}", "g")).exec(context)
+        }
         this.render = function(data_dict){
             template = this.template();
             data_dict = isa(data_dict) ? data_dict : [data_dict];
             for(var i=0;i<=data_dict.length-1;i++){
-                for(k in data_dict[i]){ template = template.replace(this.context(k), data_dict[i][k]) }
+                for(k in data_dict[i]){
+                    template = template.replace(this.context(k), data_dict[i][k])
+                }
             }
             return template;
         };
@@ -164,25 +170,34 @@
         /* api */
         this.api = this.prototype = { 
             explore: function(o, t){
-                var r = '', t = t || '',yt = "<div class=\"${ class }\" id=\"${ id }\">${ data }</div>",ytpl = new Yogurt.Templates(), tpl = new Yogurt.Templates();
+                var r = "", t = t || "<div>${ data }</div>",
+                yt = t || "<div>${ data }</div>",
+                ytpl = new Yogurt.Templates(), 
+                tpl = new Yogurt.Templates();
                 ytpl.template(yt);
                 tpl.template(t);
 
                 /* if is array just wrap it */
                 if(isa(o)){
                     for(i in o){ 
-                        if(tos(o[i]) || ton(o[i])) r += ytpl.render({data: tpl.render({i:o[i]})});
-                        else r += tpl.render({data:this.explore(o[i],t)});
+                        if(tos(o[i]) || ton(o[i])) r += ytpl.render({data:o[i]});
+                        else r += ytpl.render({data:this.explore(o[i],t)});
                     }
                 } else if(ioo(o)){
+                    if(ioi(o, Yogurt.Queryset)) o = o.objects;
+                    if(ioi(o, Yogurt.Models)) o = o.data;
                     for(i in o){
                         if(tos(o[i]) || ton(o[i])) r += tpl.render({data:o[i]});
                         else r += tpl.render({data:this.explore(o[i],t)});
                     }
                 }
                 return r;
-            }
+            },
+            ulist: function(o){ return "<ul>" + this.explore(o,"<li>${ data }</li>") + "</ul>" },
+            olist: function(o){ return "<ol>" + this.explore(o,"<li>${ data }</li>") + "</ol>" },
+            link: function(o){ if ('href' in o) return (new Yogurt.Templates()).template("<a href=\"${ href }\">${ data }</a>").render(o) }
         }
+
     };
 
     /* Queryset */
@@ -194,6 +209,8 @@
             for(var iter=0; iter <= this._data.length-1; iter++){
                 this.objects.push( this._data[iter] instanceof Yogurt.Models ? this._data[iter] : new Model(this._data[iter]) );
             }
+            // dummy model
+            if(this.objects.length<1) this.objects.push( new Model({}) );
         }
         this.iter = function(f,i,o){ return this.objects.map(f,i,o); }
         this.count = function(){ return this.objects.length }
@@ -364,15 +381,13 @@
             return tpl.template(template).render(Yogurt.api.extend(this.data, extra_context));
         };
 
-        // setter, getter
-        this._setget = function(k,v){
-            if(k&&v&&this[k]){ this[k] = v; return this }
-            else if(k&&this[k]) return this[k];
-            else for(var key in this.data){
-                if(!this.hasOwnProperty('get'+key)) this['get'+key] = function(){ return this.data[key] }
-                if(!this.hasOwnProperty('set'+key)) this['set'+key] = function(d){ this.data[key] = d; return this.data[key] }
-            }
+        this.__attach__ = function(v, fn){
+            log(v);
+            this[v] = fn;
         };
+
+        this.__get__ = function(key){ return this.data[key] }
+        this.__set__ = function(key, val){ this.data[key] = val; return this.data[key] }
 
         // set data
         this._setdata = function(){
@@ -380,9 +395,10 @@
                 // itera buscando relaciones (todo lo que es objeto es relacionado)
                 Model = this.hasOwnProperty('_'+key+'_model') ? this['_'+key+'_model'] : Model;
                 //console.log(key, this.hasOwnProperty('_'+key+'_model'));
+                // si es un objeto itera dentro generando nuevos Queryset
                 if(ioo(this.data[key])) this.data[key] = isa(this.data[key]) ? new Yogurt.Queryset(this.data[key], Model) : new Model(this.data[key]);
+                if(tos(this.data[key])) this.data[key] = this.data[key];
             }
-            this._setget();
         };
         
         this.toString = function(){ 
@@ -394,7 +410,6 @@
 
         // init model data
         this._setdata();
-        //this._setget();
 
     };
 
